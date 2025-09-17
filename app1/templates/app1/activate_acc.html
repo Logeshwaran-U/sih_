@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Activate Your Account</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; color: #333;">
+    <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <h2 style="color: #2c3e50;">Hello {{ user }}!</h2>
+        <p>Thank you for registering on our site. To activate your account, click the link below:</p>
+        <p style="text-align: center; margin: 20px 0;">
+            <a href="{{ activation_link }}" style="background-color: #3498db; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Activate your account
+            </a>
+        </p>
+        <p><strong>Note:</strong> This activation link will expire in 2 minutes.</p>
+        <p>If you did not make this request, please ignore this email.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ state.state_name }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+</head>
+<body class="bg-gradient-to-b from-gray-100 via-gray-50 to-white min-h-screen relative">
+
+<div class="container mx-auto px-6 py-12">
+
+  <!-- Tabs -->
+  <div class="flex justify-center mb-10 space-x-4">
+    <button id="tab-festival" class="px-6 py-3 rounded-t-lg bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition">Festivals</button>
+    <button id="tab-music" class="px-6 py-3 rounded-t-lg bg-gray-200 text-gray-700 font-semibold shadow-lg hover:bg-gray-300 transition">Music</button>
+  </div>
+
+  <!-- Festival Section -->
+  <div id="festival-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for festival in festival_list %}
+      <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition duration-300 p-6 flex flex-col">
+        <h3 class="text-2xl font-bold text-blue-600 mb-3">{{ festival.title|default:"Festival" }}</h3>
+        {% if festival.image %}
+          <img src="{{ festival.image.url }}" alt="{{ festival.title }}" class="w-full h-52 object-cover rounded-xl mb-4 shadow-sm">
+        {% endif %}
+        <p class="text-gray-700 text-base">{{ festival.description }}</p>
+      </div>
+    {% empty %}
+      <p class="text-center text-gray-500 col-span-full">No festivals available.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Music Section -->
+  <div id="music-section" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    {% for music in music_list %}
+      <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition duration-300 p-6 flex flex-col">
+        
+        <!-- Title -->
+        <h3 class="text-2xl font-bold text-purple-600 mb-3">{{ music.title|default:"Music" }}</h3>
+        
+        <!-- Audio -->
+        {% if music.music_file %}
+          <audio controls class="w-full rounded-lg mb-4">
+            <source src="{{ music.music_file.url }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+        {% endif %}
+        
+        <!-- Description -->
+        <p class="text-gray-600 text-base">{{ music.description }}</p>
+      </div>
+    {% empty %}
+      <p class="text-center text-gray-500 col-span-full">No music available.</p>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- Floating Create Button (Admin Only) -->
+{% if user.is_staff %}
+  <div class="fixed bottom-6 right-6">
+    <a id="create-btn" href="{% url 'add_festival' %}" 
+       class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition transform hover:scale-110">
+      <span class="text-3xl font-bold">+</span>
+    </a>
+  </div>
+{% endif %}
+
+<!-- Tabs JS -->
+<script>
+  const festivalBtn = document.getElementById('tab-festival');
+  const musicBtn = document.getElementById('tab-music');
+  const festivalSection = document.getElementById('festival-section');
+  const musicSection = document.getElementById('music-section');
+  const createBtn = document.getElementById('create-btn');
+
+  // Default: show festival
+  let currentTab = 'festival';
+
+  festivalBtn.addEventListener('click', () => {
+    festivalSection.classList.remove('hidden');
+    musicSection.classList.add('hidden');
+    festivalBtn.classList.add('bg-blue-600', 'text-white');
+    festivalBtn.classList.remove('bg-gray-200', 'text-gray-700');
+    musicBtn.classList.add('bg-gray-200', 'text-gray-700');
+    musicBtn.classList.remove('bg-blue-600', 'text-white');
+    currentTab = 'festival';
+
+    if (createBtn) {
+      createBtn.href = "{% url 'add_festival' %}";
+    }
+  });
+
+  musicBtn.addEventListener('click', () => {
+    musicSection.classList.remove('hidden');
+    festivalSection.classList.add('hidden');
+    musicBtn.classList.add('bg-blue-600', 'text-white');
+    musicBtn.classList.remove('bg-gray-200', 'text-gray-700');
+    festivalBtn.classList.add('bg-gray-200', 'text-gray-700');
+    festivalBtn.classList.remove('bg-blue-600', 'text-white');
+    currentTab = 'music';
+
+    if (createBtn) {
+      createBtn.href = "{% url 'add_music' %}";
+    }
+  });
+</script>
+
+</body>
+</html>

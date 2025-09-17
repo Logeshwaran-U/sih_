@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Festival</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10">
+  <div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4 text-green-600">Add Festival</h1>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Title -->
+      <div>
+        <label for="id_title" class="block text-sm font-medium text-gray-700">Title</label>
+        <input type="text" name="title" id="id_title" 
+               class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500" 
+               value="{{ form.title.value|default:'' }}">
+        {% if form.title.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label for="id_description" class="block text-sm font-medium text-gray-700">Description</label>
+        <textarea name="description" id="id_description" rows="4"
+                  class="mt-1 block w-full rounded border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500">{{ form.description.value|default:'' }}</textarea>
+        {% if form.description.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.description.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Image -->
+      <div>
+        <label for="id_image" class="block text-sm font-medium text-gray-700">Festival Image</label>
+        <input type="file" name="image" id="id_image" 
+               class="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded cursor-pointer bg-gray-50 focus:outline-none">
+        {% if form.image.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.image.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Save button -->
+      <div>
+        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+          Save
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
