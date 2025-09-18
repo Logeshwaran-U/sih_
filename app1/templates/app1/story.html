@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Story Generator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      #story-container {
+        width: 60%;
+        margin: 20px auto;
+        text-align: center;
+      }
+      #story-text {
+        margin: 20px 0;
+        font-size: 18px;
+      }
+      img {
+        max-width: 100%;
+        border-radius: 10px;
+      }
+      .nav-buttons {
+        margin-top: 20px;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="story-container">
+      <h1>Story Generator</h1>
+      <input
+        type="text"
+        id="prompt"
+        placeholder="Enter your story prompt"
+        style="width: 70%"
+      />
+      <button onclick="generateStory()">Generate</button>
+      <div id="loading" style="display: none">⏳ Generating story...</div>
+
+      <div id="story" style="display: none">
+        <h2 id="page-title"></h2>
+        <p id="story-text"></p>
+        <audio id="story-audio" controls style="margin-top: 15px"></audio>
+        <img id="story-image" alt="Story illustration" />
+        <div class="nav-buttons">
+          <button onclick="prevPage()">⬅ Previous</button>
+          <button onclick="nextPage()">Next ➡</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let pages = [],
+        currentPage = 0;
+
+      function generateStory() {
+        const prompt = document.getElementById("prompt").value;
+        if (!prompt) {
+          alert("Enter a prompt!");
+          return;
+        }
+
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("story").style.display = "none";
+
+        fetch("/api/generate/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: prompt }),
+        })
+          .then((res) => res.json())
+          .then((data) => checkResult(data.task_id));
+      }
+
+      function checkResult(taskId) {
+        fetch(/api/result/${taskId}/)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.status === "pending") {
+              setTimeout(() => checkResult(taskId), 2000);
+            } else if (data.status === "success") {
+              pages = data.data;
+              currentPage = 0;
+              showPage();
+              document.getElementById("loading").style.display = "none";
+              document.getElementById("story").style.display = "block";
+            } else {
+              alert("Error: " + data.message);
+            }
+          });
+      }
+
+      function showPage() {
+        if (pages.length > 0) {
+          const page = pages[currentPage];
+          document.getElementById("page-title").innerText = Page ${page.page};
+          document.getElementById("story-text").innerText = page.text;
+          document.getElementById("story-image").src = page.image;
+          document.getElementById("story-audio").src = page.audio;
+        }
+      }
+
+      function nextPage() {
+        if (currentPage < pages.length - 1) {
+          currentPage++;
+          showPage();
+        }
+      }
+      function prevPage() {
+        if (currentPage > 0) {
+          currentPage--;
+          showPage();
+        }
+      }
+    </script>
+  </body>
+</html>

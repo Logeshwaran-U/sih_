@@ -1,112 +1,150 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ state.state_name }}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-</head>
-<body class="bg-gradient-to-b from-gray-100 via-gray-50 to-white min-h-screen relative">
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ state.state_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gradient-to-b from-gray-100 via-gray-50 to-white min-h-screen">
 
-<div class="container mx-auto px-6 py-12">
+  <div class="container mx-auto px-6 py-12">
 
-  <!-- Tabs -->
-  <div class="flex justify-center mb-10 space-x-4">
-    <button id="tab-festival" class="px-6 py-3 rounded-t-lg bg-blue-600 text-white font-semibold shadow-lg hover:bg-blue-700 transition">Festivals</button>
-    <button id="tab-music" class="px-6 py-3 rounded-t-lg bg-gray-200 text-gray-700 font-semibold shadow-lg hover:bg-gray-300 transition">Music</button>
-  </div>
+    <!-- State Title -->
+    <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-10">
+      Explore <span class="text-blue-600">{{ state.state_name }}</span>
+    </h1>
 
-  <!-- Festival Section -->
-  <div id="festival-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-    {% for festival in festival_list %}
-      <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition duration-300 p-6 flex flex-col">
-        <h3 class="text-2xl font-bold text-blue-600 mb-3">{{ festival.title|default:"Festival" }}</h3>
-        {% if festival.image %}
-          <img src="{{ festival.image.url }}" alt="{{ festival.title }}" class="w-full h-52 object-cover rounded-xl mb-4 shadow-sm">
+    <!-- Tabs -->
+    <div class="flex justify-center mb-10 space-x-6 border-b border-gray-200">
+      <button data-tab="festivals" class="tab-btn active">🎉 Festivals</button>
+      <button data-tab="music" class="tab-btn">🎶 Music</button>
+      <button data-tab="community" class="tab-btn">🌍 Community</button>
+    </div>
+
+    <!-- Festival Section -->
+    <div id="festivals" class="tab-content grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% for festival in festivals %}
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-1 p-6 relative">
+          <h3 class="text-2xl font-bold text-blue-600">{{ festival.title }}</h3>
+          {% if festival.image %}
+            <img src="{{ festival.image.url }}" alt="{{ festival.title }}" class="w-full h-48 object-cover rounded-xl my-4">
+          {% endif %}
+          <p class="text-gray-600 leading-relaxed">{{ festival.description }}</p>
+        </div>
+      {% empty %}
+        <p class="text-center text-gray-500 col-span-full italic">No festivals available.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Music Section -->
+    <div id="music" class="tab-content hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% for song in songs %}
+        <div class="bg-white rounded-2xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-1 p-6 relative">
+          <h3 class="text-2xl font-bold text-purple-600">{{ song.title }}</h3>
+          {% if song.music_file %}
+            <audio controls class="w-full my-4 rounded-lg border border-gray-200">
+              <source src="{{ song.music_file.url }}" type="audio/mpeg">
+            </audio>
+          {% endif %}
+          <p class="text-gray-600 leading-relaxed">{{ song.description }}</p>
+        </div>
+      {% empty %}
+        <p class="text-center text-gray-500 col-span-full italic">No music available.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Community Section -->
+    <!-- Community Section -->
+<div id="community" class="tab-content hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+  {% for post in community_posts %}
+    <div class="bg-white rounded-2xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-1 p-6 relative">
+
+      <!-- Author Avatar -->
+      <div class="flex items-center mb-4 space-x-3">
+        {% if post.user.avatar %}
+          <img src="{{ post.user.avatar.url }}" 
+               alt="{{ post.user.name }}" 
+               class="w-10 h-10 rounded-full object-cover shadow">
+        {% else %}
+          <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+            {{ post.user.name|default:post.user.email|first|upper }}
+          </div>
         {% endif %}
-        <p class="text-gray-700 text-base">{{ festival.description }}</p>
+        <p class="font-semibold text-gray-800">
+          {{ post.user.name|default:post.user.email }}
+        </p>
       </div>
-    {% empty %}
-      <p class="text-center text-gray-500 col-span-full">No festivals available.</p>
-    {% endfor %}
-  </div>
 
-  <!-- Music Section -->
-  <div id="music-section" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-    {% for music in music_list %}
-      <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition duration-300 p-6 flex flex-col">
-        
-        <!-- Title -->
-        <h3 class="text-2xl font-bold text-purple-600 mb-3">{{ music.title|default:"Music" }}</h3>
-        
-        <!-- Audio -->
-        {% if music.music_file %}
-          <audio controls class="w-full rounded-lg mb-4">
-            <source src="{{ music.music_file.url }}" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio>
-        {% endif %}
-        
-        <!-- Description -->
-        <p class="text-gray-600 text-base">{{ music.description }}</p>
-      </div>
-    {% empty %}
-      <p class="text-center text-gray-500 col-span-full">No music available.</p>
-    {% endfor %}
-  </div>
-
+      <!-- Post Content -->
+      <h3 class="text-2xl font-bold text-green-600">{{ post.title }}</h3>
+      <p class="text-sm text-gray-500 mb-3">{{ post.category|capfirst }}</p>
+      {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" 
+             class="w-full h-48 object-cover rounded-xl mb-4">
+      {% endif %}
+      <p class="text-gray-600 leading-relaxed">{{ post.description }}</p>
+      <p class="text-xs text-gray-400 mt-3">
+        Posted on {{ post.created_at|date:"M d, Y H:i" }}
+      </p>
+    </div>
+  {% empty %}
+    <p class="text-center text-gray-500 col-span-full italic">No community posts yet.</p>
+  {% endfor %}
 </div>
 
-<!-- Floating Create Button (Admin Only) -->
-{% if user.is_staff %}
-  <div class="fixed bottom-6 right-6">
-    <a id="create-btn" href="{% url 'add_festival' %}" 
-       class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition transform hover:scale-110">
-      <span class="text-3xl font-bold">+</span>
-    </a>
-  </div>
-{% endif %}
+  <!-- Floating Add Buttons -->
+  {% if user.is_staff %}
+    <a id="btn-festival" href="{% url 'add_festival' state.id %}" 
+      class="floating-btn bg-blue-600 hover:bg-blue-700 animate-bounce">+</a>
+    <a id="btn-music" href="{% url 'add_music' state.id %}" 
+      class="floating-btn bg-purple-600 hover:bg-purple-700 hidden animate-bounce">+</a>
+  {% endif %}
 
-<!-- Tabs JS -->
-<script>
-  const festivalBtn = document.getElementById('tab-festival');
-  const musicBtn = document.getElementById('tab-music');
-  const festivalSection = document.getElementById('festival-section');
-  const musicSection = document.getElementById('music-section');
-  const createBtn = document.getElementById('create-btn');
+  {% if user.is_authenticated %}
+    <a id="btn-community" href="{% url 'add_state_post' state.slug %}" 
+      class="floating-btn bg-green-600 hover:bg-green-700 hidden animate-bounce">+</a>
+  {% endif %}
 
-  // Default: show festival
-  let currentTab = 'festival';
+  <!-- Tabs & Button Toggle JS -->
+  <script>
+    const tabs = document.querySelectorAll(".tab-btn");
+    const contents = document.querySelectorAll(".tab-content");
+    const buttons = {
+      festivals: document.getElementById("btn-festival"),
+      music: document.getElementById("btn-music"),
+      community: document.getElementById("btn-community"),
+    };
 
-  festivalBtn.addEventListener('click', () => {
-    festivalSection.classList.remove('hidden');
-    musicSection.classList.add('hidden');
-    festivalBtn.classList.add('bg-blue-600', 'text-white');
-    festivalBtn.classList.remove('bg-gray-200', 'text-gray-700');
-    musicBtn.classList.add('bg-gray-200', 'text-gray-700');
-    musicBtn.classList.remove('bg-blue-600', 'text-white');
-    currentTab = 'festival';
+    tabs.forEach(btn => {
+      btn.addEventListener("click", () => {
+        // Tab highlight
+        tabs.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
 
-    if (createBtn) {
-      createBtn.href = "{% url 'add_festival' %}";
+        // Show correct content
+        contents.forEach(c => c.classList.add("hidden"));
+        document.getElementById(btn.dataset.tab).classList.remove("hidden");
+
+        // Show correct + button
+        Object.values(buttons).forEach(b => b?.classList.add("hidden"));
+        buttons[btn.dataset.tab]?.classList.remove("hidden");
+      });
+    });
+  </script>
+
+  <!-- Tailwind Custom -->
+  <style>
+    .tab-btn {
+      @apply px-6 py-3 text-lg rounded-t-lg bg-gray-100 text-gray-700 font-semibold transition-all duration-300;
     }
-  });
-
-  musicBtn.addEventListener('click', () => {
-    musicSection.classList.remove('hidden');
-    festivalSection.classList.add('hidden');
-    musicBtn.classList.add('bg-blue-600', 'text-white');
-    musicBtn.classList.remove('bg-gray-200', 'text-gray-700');
-    festivalBtn.classList.add('bg-gray-200', 'text-gray-700');
-    festivalBtn.classList.remove('bg-blue-600', 'text-white');
-    currentTab = 'music';
-
-    if (createBtn) {
-      createBtn.href = "{% url 'add_music' %}";
+    .tab-btn.active {
+      @apply bg-blue-600 text-white shadow-md;
     }
-  });
-</script>
+    .floating-btn { 
+      @apply fixed bottom-6 right-6 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-xl text-3xl transition transform hover:scale-110;
+    }
+  </style>
 
-</body>
-</html>
+  </body>
+  </html>

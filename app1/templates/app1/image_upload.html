@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Image to Culture</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 20px;
+      }
+      #container {
+        width: 100%;
+        max-width: 600px;
+        background: #fff;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        text-align: center;
+      }
+      h2 {
+        color: #1a1a1a;
+      }
+      form {
+        margin-bottom: 2rem;
+      }
+      input[type="file"] {
+        margin-bottom: 1rem;
+      }
+      button {
+        padding: 10px 20px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #result-container {
+        text-align: left;
+        margin-top: 1.5rem;
+      }
+      #result-container h3 {
+        color: #007bff;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 5px;
+        margin-top: 1.5rem;
+      }
+      #result-container p {
+        line-height: 1.6;
+      }
+      #uploaded-image {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      strong {
+        color: #555;
+      }
+      #story-container {
+        margin-top: 2rem;
+        padding: 1rem;
+        border-radius: 8px;
+        background: #fafafa;
+        border: 1px solid #ddd;
+      }
+      #story-container h3 {
+        color: #28a745;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <h2>Upload an Image to Detect Indian Culture</h2>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %} {{ form.as_p }}
+        <button type="submit">Analyze Image</button>
+      </form>
+
+      <div id="status"></div>
+      <div id="result-container"></div>
+      <div id="story-container"></div>
+    </div>
+
+    <script>
+      const form = document.querySelector("form");
+      const statusDiv = document.getElementById("status");
+      const resultContainer = document.getElementById("result-container");
+      const storyContainer = document.getElementById("story-container");
+      const imageInput = document.querySelector('input[type="file"]');
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (!imageInput.files || imageInput.files.length === 0) {
+          alert("Please select an image file to upload.");
+          return;
+        }
+
+        let formData = new FormData(form);
+        statusDiv.innerText = "⏳ Uploading and processing...";
+        resultContainer.innerHTML = "";
+        storyContainer.innerHTML = "";
+
+        try {
+          let res = await fetch("", { method: "POST", body: formData });
+          let data = await res.json();
+          if (!data.task_id) {
+            throw new Error("Failed to start analysis task.");
+          }
+          pollForResult(data.task_id);
+        } catch (error) {
+          statusDiv.innerText = Error: ${error.message};
+        }
+      });
+
+      function pollForResult(taskId) {
+        const poll = setInterval(async () => {
+          try {
+            let r = await fetch(/image-result/${taskId}/);
+            let d = await r.json();
+
+            if (d.status === "pending") {
+              statusDiv.innerText = "⏳ AI is analyzing the image...";
+            } else {
+              clearInterval(poll);
+              statusDiv.innerText = "";
+
+              if (d.status === "success" && d.data && !d.data.error) {
+                displayResult(d.data);
+              } else {
+                const errorMessage = d.data
+                  ? d.data.error
+                  : "An unknown error occurred.";
+                resultContainer.innerHTML = <p style="color: red;"><strong>Analysis Failed:</strong> ${errorMessage}</p>;
+              }
+            }
+          } catch (error) {
+            clearInterval(poll);
+            statusDiv.innerText = Error: ${error.message};
+          }
+        }, 3000);
+      }
+
+      function displayResult(data) {
+        const { identification, details, commercial_info, confidence } = data;
+        const uploadedImageUrl = URL.createObjectURL(imageInput.files[0]);
+
+        let html = `
+          <img id="uploaded-image" src="${uploadedImageUrl}" alt="Uploaded content" style="display:block;"/>
+          <h2>${identification.object_name}</h2>
+          <p>
+            <strong>State:</strong> ${identification.state || "N/A"} <br/>
+            <strong>Location:</strong> ${identification.city || "N/A"} <br/>
+            <strong>Confidence:</strong> ${(confidence * 100).toFixed(1)}%
+          </p>
+
+          <h3>Description</h3>
+          <p>${details.description || "No description available."}</p>
+          <h3>History & Significance</h3>
+          <p>${details.history_summary || "No history summary available."}</p>
+        `;
+
+        if (details.founder) {
+          html += <p><strong>Founder/Origin:</strong> ${details.founder}</p>;
+        }
+
+        if (commercial_info && commercial_info.purchase_suggestion) {
+          html += `
+            <h3>Buying Guide</h3>
+            <p>${commercial_info.purchase_suggestion}</p>
+          `;
+        }
+
+        html += <button id="story-btn">📖 Tell me a story</button>;
+        resultContainer.innerHTML = html;
+
+        // ✅ Attach event listener safely
+        document.getElementById("story-btn").addEventListener("click", () => {
+          generateStory(
+            identification.object_name,
+            details.description,
+            details.history_summary
+          );
+        });
+      }
+
+      async function generateStory(objectName, description, history) {
+        storyContainer.innerHTML = "⏳ Generating story...";
+
+        let res = await fetch("/generate-story/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            object_name: objectName,
+            description: description,
+            history: history,
+          }),
+        });
+
+        let data = await res.json();
+        if (!data.task_id) {
+          storyContainer.innerText = "❌ Failed to start story task.";
+          return;
+        }
+
+        pollForStory(data.task_id);
+      }
+
+      function pollForStory(taskId) {
+        const poll = setInterval(async () => {
+          let r = await fetch(/story-result/${taskId}/);
+          let d = await r.json();
+
+          if (d.status === "pending") {
+            storyContainer.innerText = "⏳ AI is writing the story...";
+          } else {
+            clearInterval(poll);
+            if (d.status === "success") {
+              let storyData = d.data;
+              storyContainer.innerHTML = `
+                <h3>Generated Story</h3>
+                <p>${storyData.story}</p>
+                ${
+                  storyData.audio
+                    ? <audio controls src="${storyData.audio}"></audio>
+                    : ""
+                }
+              `;
+            } else {
+              storyContainer.innerText = "❌ Failed to generate story.";
+            }
+          }
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>

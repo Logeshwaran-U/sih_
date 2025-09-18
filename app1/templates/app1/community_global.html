@@ -1,0 +1,123 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Community</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Page Title -->
+    <h1 class="text-3xl font-bold mb-6 text-center">Global Community</h1>
+
+    <!-- Floating Add Post Button -->
+    {% if user.is_authenticated %}
+      <a href="{% url 'add_global_post' %}" 
+         class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg text-3xl">
+        <i class="bi bi-plus"></i>
+      </a>
+    {% endif %}
+
+    <!-- Category Filter (like your blog template) -->
+    <div class="flex gap-2 overflow-x-auto mb-6 py-2 px-1">
+      <a href="{% url 'community_global' %}" 
+         class="px-3 py-1 border rounded-lg text-sm font-medium {% if not current_category %}bg-blue-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %}">
+        All
+      </a>
+      {% for key, value in categories.items %}
+        <a href="?category={{ key }}{% if search_query %}&search={{ search_query }}{% endif %}"
+           class="px-3 py-1 border rounded-lg text-sm font-medium whitespace-nowrap {% if key == current_category %}bg-blue-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-100{% endif %}">
+          {{ value }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <!-- Posts Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for post in posts %}
+        <div class="bg-white shadow rounded-2xl flex flex-col relative hover:shadow-lg transition p-5">
+
+          <!-- Edit/Delete Buttons for Author -->
+          {% if request.user.is_authenticated and request.user.id == post.user.id %}  
+                    <div class="absolute top-3 right-3 flex gap-2">
+              <a href="{% url 'update_global_post' post.pk %}" 
+                 class="bg-yellow-400 hover:bg-yellow-500 text-white text-xs font-semibold px-2 py-1 rounded-lg shadow">
+                 <i class="bi bi-pencil"></i>
+              </a>
+              <a href="" 
+                 class="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-lg shadow">
+                 <i class="bi bi-trash"></i>
+              </a>
+            </div>
+          {% endif %}
+
+          <!-- Post Author Avatar -->
+          <div class="flex items-center mb-4 space-x-3">
+            {% if post.user.avatar %}
+              <img src="{{ post.user.avatar.url }}" 
+                   alt="{{ post.user.name }}" 
+                   class="w-10 h-10 rounded-full object-cover shadow">
+            {% else %}
+              <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+                {{ post.user.name|default:post.user.email|first|upper }}
+              </div>
+            {% endif %}
+            <p class="font-semibold text-gray-800">{{ post.user.name|default:post.user.email }}</p>
+          </div>
+
+          <!-- Post Header -->
+          <div class="text-xs text-gray-500 flex items-center gap-2 mb-2">
+  <span>{{ post.created_at|timesince }} ago</span>
+
+  <!-- Make category badge clickable -->
+  <a href="?category={{ post.category }}{% if search_query %}&search={{ search_query }}{% endif %}"
+     class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition text-xs font-medium">
+    {{ post.category|capfirst }}
+  </a>
+
+  {% if post.state %}
+    <span>| {{ post.state.state_name }}</span>
+  {% endif %}
+</div>
+
+          <!-- Post Title -->
+          <h2 class="font-bold text-lg mb-2">{{ post.title }}</h2>
+
+          <!-- Post Image -->
+          {% if post.image %}
+            <img src="{{ post.image.url }}" class="w-full h-48 object-cover rounded-lg mb-3">
+          {% endif %}
+
+          <!-- Post Description -->
+          <p class="text-gray-700 flex-grow">{{ post.description|truncatechars:150 }}</p>
+
+          <!-- Footer: Likes + Timestamp -->
+          <div class="flex items-center justify-between mt-4 text-sm text-gray-500">
+            <div class="flex items-center gap-1">
+              {% if user.is_authenticated %}
+                <button class="like-btn" data-post-id="{{ post.id }}">
+                  <i class="bi {% if user in post.likes.all %}bi-heart-fill text-red-500{% else %}bi-heart{% endif %}"></i>
+                </button>
+              {% else %}
+                <i class="bi bi-heart"></i>
+              {% endif %}
+              <span id="like-count-{{ post.id }}">{{ post.likes.count }}</span> Likes
+            </div>
+            <span>Posted {{ post.created_at|date:"M d, Y H:i" }}</span>
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-center col-span-full text-gray-500">No posts yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Bootstrap Icons for Like/Edit/Delete -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+</body>
+</html>

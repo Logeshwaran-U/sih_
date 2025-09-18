@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-gray-100 via-gray-50 to-white min-h-screen flex items-center justify-center">
+
+  <div class="bg-white shadow-lg rounded-2xl w-full max-w-lg p-8">
+    <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">Update Profile</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Avatar -->
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Profile Picture</label>
+        {% if user.avatar %}
+          <img src="{{ user.avatar.url }}" alt="Profile Picture" 
+               class="w-20 h-20 rounded-full mb-3 object-cover border-2 border-blue-300">
+        {% endif %}
+        {{ form.avatar }}
+      </div>
+
+      <!-- Name -->
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Name</label>
+        {{ form.name }}
+      </div>
+
+      <!-- Bio -->
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Bio</label>
+        {{ form.bio }}
+      </div>
+
+      <button type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+        Save Changes
+      </button>
+    </form>
+  </div>
+
+</body>
+</html>

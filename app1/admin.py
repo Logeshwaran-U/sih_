@@ -34,3 +34,4 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('email', 'name', 'password1', 'password2', 'avatar')}),
     )
 admin.site.register(CustomUser,CustomUserAdmin)
+
